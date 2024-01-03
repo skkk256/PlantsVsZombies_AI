@@ -16,7 +16,7 @@ class State():
     
     @abstractmethod
     def startup(self, current_time, persist):
-        '''abstract method'''
+        """abstract method"""
 
     def cleanup(self):
         self.done = False

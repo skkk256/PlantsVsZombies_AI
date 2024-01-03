@@ -1,4 +1,7 @@
-# PythonPlantsVsZombies
+# PythonPlantsVsZombies with AI
+
+fork from [PythonPlantsVsZombies](https://github.com/marblexu/PythonPlantsVsZombies)
+
   A simple PlantsVsZombies game. <br>
   `It's only for personal learning and noncommercial use. If this game infringes the copyright, please let me know.`
 * implement plants: sunflower, peashooter, wallnut, snowpeashooter, cherrybomb, threepeashooter, chomper, puffshroom, potatomine, spikeweed, scaredyshroom, squash, scaredyshroom, jalapeno, sunShroom, iceShroom, hypnoShroom.
