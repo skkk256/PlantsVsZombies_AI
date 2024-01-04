@@ -1,32 +1,32 @@
 # PythonPlantsVsZombies with AI
 
-fork from [PythonPlantsVsZombies](https://github.com/marblexu/PythonPlantsVsZombies)
+PVZ fork from [PythonPlantsVsZombies](https://github.com/marblexu/PythonPlantsVsZombies)
 
-  A simple PlantsVsZombies game. <br>
-  `It's only for personal learning and noncommercial use. If this game infringes the copyright, please let me know.`
-* implement plants: sunflower, peashooter, wallnut, snowpeashooter, cherrybomb, threepeashooter, chomper, puffshroom, potatomine, spikeweed, scaredyshroom, squash, scaredyshroom, jalapeno, sunShroom, iceShroom, hypnoShroom.
-* implement zombies: zombie, flagzombie, coneheadzombie, bucketheadzombie, newspaperzombie.
-* use json file to store level data (e.g.position and time of zombies, background info)
-* support to select plant cards at the beginning of the level
-* support day level, night level, moving card select level and wallnut bowling level
+## TODO
+-[ ] 分成 GameState, Agent, GameRunner 三部分
+-[ ] 简单情况，只有豌豆射手和向日葵两种植物，一种僵尸，根据state( 僵尸数量，距离，阳光数量选择植物和摆放位置 )
+  - 贝叶斯, 对抗, MDP, 强化学习……
+-[ ] [option] 更多植物和更多种类僵尸
+-[ ] [option] 如何更优地选择植物
 
-# Requirement
-* Python 3.7 
-* Notice: python version 3.7 is advisable, but not required. For LINUX: if your Linux system has a preinstalled python 3+, it's ok to run this game. Updating to python 3.7 directly may break LINUX Mint.
-* Python-Pygame 1.9
+## 游戏部分
+```
+├── state
+│   ├── levle.py     # 游戏界面
+│   ├── mainmenu.py  # 开始界面
+│   ├── screen.py    # 结束界面
+│    ...
+├── tool.py          # controler
+```
 
-# How To Start Game
-$ python main.py
+## AI Agent
+```
+├── agents
+│   ├── 
+│   ├── 
+│   ├── 
+│    ...
 
-# How to Play
-* use mouse to collect sun, select the plant cards and seed the plant 
-* you can set the start level by changing START_LEVEL_NUM value in source/constants.py
-  * level 1 and 2：day level
-  * level 3: night level
-  * level 4: moving card select level
-  * level 5: wallnut bowling level
+```
 
-# Demo
-![demo1](https://raw.githubusercontent.com/marblexu/PythonPlantsVsZombies/master/demo/demo1.jpg)
-![demo2](https://raw.githubusercontent.com/marblexu/PythonPlantsVsZombies/master/demo/demo2.jpg)
 
