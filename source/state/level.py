@@ -7,17 +7,46 @@ from .. import tool
 from .. import constants as c
 from ..component import map, plant, zombie, menubar
 
+
 class Level(tool.State):
     def __init__(self):
         tool.State.__init__(self)
-    
+        self.hint_rect = None
+        self.sun_timer = None
+        self.produce_sun = None
+        self.hint_plant = None
+        self.hint_image = None
+        self.menubar = None
+        self.panel = None
+        self.drag_plant = None
+        self.bar_type = None
+        self.cars = None
+        self.zombie_start_time = None
+        self.zombie_list = None
+        self.bullet_groups = None
+        self.hypno_zombie_groups = None
+        self.zombie_groups = None
+        self.plant_groups = None
+        self.head_group = None
+        self.sun_group: pg.sprite.Sprite = None
+        self.viewport = None
+        self.level = None
+        self.bg_rect = None
+        self.background = None
+        self.background_type = None
+        self.map_data = None
+        self.map = None
+        self.map_y_len = None
+        self.game_info = None
+        self.state = None
+
     def startup(self, current_time, persist):
         self.game_info = persist
         self.persist = self.game_info
         self.game_info[c.CURRENT_TIME] = current_time
         self.map_y_len = c.GRID_Y_LEN
         self.map = map.Map(c.GRID_X_LEN, self.map_y_len)
-        
+
         self.loadMap()
         self.setupBackground()
         self.initState()
@@ -28,7 +57,7 @@ class Level(tool.State):
         f = open(file_path)
         self.map_data = json.load(f)
         f.close()
-    
+
     def setupBackground(self):
         img_index = self.map_data[c.BACKGROUND_TYPE]
         self.background_type = img_index
@@ -38,21 +67,21 @@ class Level(tool.State):
         self.level = pg.Surface((self.bg_rect.w, self.bg_rect.h)).convert()
         self.viewport = tool.SCREEN.get_rect(bottom=self.bg_rect.bottom)
         self.viewport.x += c.BACKGROUND_OFFSET_X
-    
+
     def setupGroups(self):
         self.sun_group = pg.sprite.Group()
         self.head_group = pg.sprite.Group()
 
         self.plant_groups = []
         self.zombie_groups = []
-        self.hypno_zombie_groups = [] #zombies who are hypno after eating hypnoshroom
+        self.hypno_zombie_groups = []  # zombies who are hypno after eating hypnoshroom
         self.bullet_groups = []
         for i in range(self.map_y_len):
             self.plant_groups.append(pg.sprite.Group())
             self.zombie_groups.append(pg.sprite.Group())
             self.hypno_zombie_groups.append(pg.sprite.Group())
             self.bullet_groups.append(pg.sprite.Group())
-    
+
     def setupZombies(self):
         def takeTime(element):
             return element[0]
@@ -67,15 +96,16 @@ class Level(tool.State):
         self.cars = []
         for i in range(self.map_y_len):
             _, y = self.map.getMapGridPos(0, i)
-            self.cars.append(plant.Car(-25, y+20, i))
+            self.cars.append(plant.Car(-25, y + 20, i))
 
-    def update(self, surface, current_time, mouse_pos, mouse_click):
+    def update(self, current_time, mouse_pos, mouse_click):
         self.current_time = self.game_info[c.CURRENT_TIME] = current_time
         if self.state == c.CHOOSE:
             self.choose(mouse_pos, mouse_click)
         elif self.state == c.PLAY:
             self.play(mouse_pos, mouse_click)
 
+    def render(self, surface):
         self.draw(surface)
 
     def initBowlingMap(self):
@@ -91,7 +121,10 @@ class Level(tool.State):
             self.bar_type = c.CHOOSEBAR_STATIC
 
         if self.bar_type == c.CHOOSEBAR_STATIC:
-            self.initChoose()
+            if self.map_data.get("use_default"):
+                self.initPlay([0, 1, 2, 3, 4, 6, 9, 7])
+            else:
+                self.initChoose()
         else:
             card_pool = menubar.getCardPool(self.map_data[c.CARD_POOL])
             self.initPlay(card_pool)
@@ -133,7 +166,7 @@ class Level(tool.State):
             self.zombie_start_time = self.current_time
         elif len(self.zombie_list) > 0:
             data = self.zombie_list[0]
-            if  data[0] <= (self.current_time - self.zombie_start_time):
+            if data[0] <= (self.current_time - self.zombie_start_time):
                 self.createZombie(data[1], data[2])
                 self.zombie_list.remove(data)
 
@@ -148,7 +181,7 @@ class Level(tool.State):
 
         self.head_group.update(self.game_info)
         self.sun_group.update(self.game_info)
-        
+
         if not self.drag_plant and mouse_pos and mouse_click[0]:
             result = self.menubar.checkCardClick(mouse_pos)
             if result:
@@ -163,9 +196,9 @@ class Level(tool.State):
                     self.addPlant()
             elif mouse_pos is None:
                 self.setupHintImage()
-        
+
         if self.produce_sun:
-            if(self.current_time - self.sun_timer) > c.PRODUCE_SUN_INTERVAL:
+            if (self.current_time - self.sun_timer) > c.PRODUCE_SUN_INTERVAL:
                 self.sun_timer = self.current_time
                 map_x, map_y = self.map.getRandomMapIndex()
                 x, y = self.map.getMapGridPos(map_x, map_y)
@@ -202,7 +235,7 @@ class Level(tool.State):
     def canSeedPlant(self):
         x, y = pg.mouse.get_pos()
         return self.map.showPlant(x, y)
-        
+
     def addPlant(self):
         pos = self.canSeedPlant()
         if pos is None:
@@ -263,13 +296,13 @@ class Level(tool.State):
         if self.bar_type != c.CHOSSEBAR_BOWLING:
             self.map.setMapGridType(map_x, map_y, c.MAP_EXIST)
         self.removeMouseImage()
-        #print('addPlant map[%d,%d], grid pos[%d, %d] pos[%d, %d]' % (map_x, map_y, x, y, pos[0], pos[1]))
+        # print('addPlant map[%d,%d], grid pos[%d, %d] pos[%d, %d]' % (map_x, map_y, x, y, pos[0], pos[1]))
 
     def setupHintImage(self):
         pos = self.canSeedPlant()
         if pos and self.mouse_image:
             if (self.hint_image and pos[0] == self.hint_rect.x and
-                pos[1] == self.hint_rect.y):
+                    pos[1] == self.hint_rect.y):
                 return
             width, height = self.mouse_rect.w, self.mouse_rect.h
             image = pg.Surface([width, height])
@@ -295,10 +328,10 @@ class Level(tool.State):
             width, height = rect.w, rect.h
 
         if (plant_name == c.POTATOMINE or plant_name == c.SQUASH or
-            plant_name == c.SPIKEWEED or plant_name == c.JALAPENO or
-            plant_name == c.SCAREDYSHROOM or plant_name == c.SUNSHROOM or
-            plant_name == c.ICESHROOM or plant_name == c.HYPNOSHROOM or
-            plant_name == c.WALLNUTBOWLING or plant_name == c.REDWALLNUTBOWLING):
+                plant_name == c.SPIKEWEED or plant_name == c.JALAPENO or
+                plant_name == c.SCAREDYSHROOM or plant_name == c.SUNSHROOM or
+                plant_name == c.ICESHROOM or plant_name == c.HYPNOSHROOM or
+                plant_name == c.WALLNUTBOWLING or plant_name == c.REDWALLNUTBOWLING):
             color = c.WHITE
         else:
             color = c.BLACK
@@ -325,7 +358,7 @@ class Level(tool.State):
                     if zombie and zombie.state != c.DIE:
                         zombie.setDamage(bullet.damage, bullet.ice)
                         bullet.setExplode()
-    
+
     def checkZombieCollisions(self):
         if self.bar_type == c.CHOSSEBAR_BOWLING:
             ratio = 0.6
@@ -353,7 +386,7 @@ class Level(tool.State):
                 if hypno_zombie.health <= 0:
                     continue
                 zombie_list = pg.sprite.spritecollide(hypno_zombie,
-                               self.zombie_groups[i], False,collided_func)
+                                                      self.zombie_groups[i], False, collided_func)
                 for zombie in zombie_list:
                     if zombie.state == c.DIE:
                         continue
@@ -393,10 +426,10 @@ class Level(tool.State):
         if self.bar_type != c.CHOSSEBAR_BOWLING:
             self.map.setMapGridType(map_x, map_y, c.MAP_EMPTY)
         if (plant.name == c.CHERRYBOMB or plant.name == c.JALAPENO or
-            (plant.name == c.POTATOMINE and not plant.is_init) or
-            plant.name == c.REDWALLNUTBOWLING):
+                (plant.name == c.POTATOMINE and not plant.is_init) or
+                plant.name == c.REDWALLNUTBOWLING):
             self.boomZombies(plant.rect.centerx, map_y, plant.explode_y_range,
-                            plant.explode_x_range)
+                             plant.explode_x_range)
         elif plant.name == c.ICESHROOM and plant.state != c.SLEEP:
             self.freezeZombies(plant)
         elif plant.name == c.HYPNOSHROOM and plant.state != c.SLEEP:
@@ -413,16 +446,16 @@ class Level(tool.State):
             if plant.state == c.IDLE:
                 if zombie_len > 0:
                     plant.setAttack()
-                elif (i-1) >= 0 and len(self.zombie_groups[i-1]) > 0:
+                elif (i - 1) >= 0 and len(self.zombie_groups[i - 1]) > 0:
                     plant.setAttack()
-                elif (i+1) < self.map_y_len and len(self.zombie_groups[i+1]) > 0:
+                elif (i + 1) < self.map_y_len and len(self.zombie_groups[i + 1]) > 0:
                     plant.setAttack()
             elif plant.state == c.ATTACK:
                 if zombie_len > 0:
                     pass
-                elif (i-1) >= 0 and len(self.zombie_groups[i-1]) > 0:
+                elif (i - 1) >= 0 and len(self.zombie_groups[i - 1]) > 0:
                     pass
-                elif (i+1) < self.map_y_len and len(self.zombie_groups[i+1]) > 0:
+                elif (i + 1) < self.map_y_len and len(self.zombie_groups[i + 1]) > 0:
                     pass
                 else:
                     plant.setIdle()
@@ -468,19 +501,19 @@ class Level(tool.State):
                     plant.setAttack()
             elif plant.state != c.IDLE:
                 plant.setIdle()
-        elif(plant.name == c.WALLNUTBOWLING or
-             plant.name == c.REDWALLNUTBOWLING):
+        elif (plant.name == c.WALLNUTBOWLING or
+              plant.name == c.REDWALLNUTBOWLING):
             pass
         else:
             can_attack = False
-            if (plant.state == c.IDLE and zombie_len > 0):
+            if plant.state == c.IDLE and zombie_len > 0:
                 for zombie in self.zombie_groups[i]:
                     if plant.canAttack(zombie):
                         can_attack = True
                         break
             if plant.state == c.IDLE and can_attack:
                 plant.setAttack()
-            elif (plant.state == c.ATTACK and not can_attack):
+            elif plant.state == c.ATTACK and not can_attack:
                 plant.setIdle()
 
     def checkPlants(self):
@@ -498,7 +531,7 @@ class Level(tool.State):
             if len(self.zombie_groups[i]) > 0:
                 return False
         return True
-    
+
     def checkLose(self):
         for i in range(self.map_y_len):
             for zombie in self.zombie_groups[i]:
@@ -529,7 +562,7 @@ class Level(tool.State):
 
     def draw(self, surface):
         self.level.blit(self.background, self.viewport, self.viewport)
-        surface.blit(self.level, (0,0), self.viewport)
+        surface.blit(self.level, (0, 0), self.viewport)
         if self.state == c.CHOOSE:
             self.panel.draw(surface)
         elif self.state == c.PLAY:

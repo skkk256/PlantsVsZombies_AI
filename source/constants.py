@@ -13,24 +13,26 @@ GRID_Y_LEN = 5
 GRID_X_SIZE = 80
 GRID_Y_SIZE = 100
 
-
-WHITE        = (255, 255, 255)
-NAVYBLUE     = ( 60,  60, 100)
-SKY_BLUE     = ( 39, 145, 251)
-BLACK        = (  0,   0,   0)
-LIGHTYELLOW  = (234, 233, 171)
-RED          = (255,   0,   0)
-PURPLE       = (255,   0, 255)
-GOLD         = (255, 215,   0)
-GREEN        = (  0, 255,   0)
+WHITE = (255, 255, 255)
+NAVYBLUE = (60, 60, 100)
+SKY_BLUE = (39, 145, 251)
+BLACK = (0, 0, 0)
+LIGHTYELLOW = (234, 233, 171)
+RED = (255, 0, 0)
+PURPLE = (255, 0, 255)
+GOLD = (255, 215, 0)
+GREEN = (0, 255, 0)
 
 SIZE_MULTIPLIER = 1.3
 
-#GAME INFO DICTIONARY KEYS
+# AI_AGENT
+MOUSE_AGENT = "MouseAgent"
+
+# GAME INFO DICTIONARY KEYS
 CURRENT_TIME = 'current time'
 LEVEL_NUM = 'level num'
 
-#STATES FOR ENTIRE GAME
+# STATES FOR ENTIRE GAME
 MAIN_MENU = 'main menu'
 LOAD_SCREEN = 'load screen'
 GAME_LOSE = 'game los'
@@ -42,7 +44,7 @@ OPTION_ADVENTURE = 'Adventure'
 GAME_LOOSE_IMAGE = 'GameLoose'
 GAME_VICTORY_IMAGE = 'GameVictory'
 
-#MAP COMPONENTS
+# MAP COMPONENTS
 BACKGROUND_NAME = 'Background'
 BACKGROUND_TYPE = 'background_type'
 INIT_SUN_NAME = 'init_sun_value'
@@ -55,7 +57,7 @@ BACKGROUND_OFFSET_X = 220
 MAP_OFFSET_X = 35
 MAP_OFFSET_Y = 100
 
-#MENUBAR
+# MENUBAR
 CHOOSEBAR_TYPE = 'choosebar_type'
 CHOOSEBAR_STATIC = 0
 CHOOSEBAR_MOVE = 1
@@ -69,7 +71,7 @@ CARD_POOL = 'card_pool'
 MOVEBAR_CARD_FRESH_TIME = 6000
 CARD_MOVE_TIME = 60
 
-#PLANT INFO
+# PLANT INFO
 PLANT_IMAGE_RECT = 'plant_image_rect'
 CAR = 'car'
 SUN = 'Sun'
@@ -110,7 +112,7 @@ ICE_SLOW_TIME = 2000
 FREEZE_TIME = 7500
 ICETRAP = 'IceTrap'
 
-#PLANT CARD INFO
+# PLANT CARD INFO
 CARD_SUNFLOWER = 'card_sunflower'
 CARD_PEASHOOTER = 'card_peashooter'
 CARD_SNOWPEASHOOTER = 'card_snowpea'
@@ -130,13 +132,13 @@ CARD_ICESHROOM = 'card_iceshroom'
 CARD_HYPNOSHROOM = 'card_hypnoshroom'
 CARD_REDWALLNUT = 'card_redwallnut'
 
-#BULLET INFO
+# BULLET INFO
 BULLET_PEA = 'PeaNormal'
 BULLET_PEA_ICE = 'PeaIce'
 BULLET_MUSHROOM = 'BulletMushRoom'
 BULLET_DAMAGE_NORMAL = 1
 
-#ZOMBIE INFO
+# ZOMBIE INFO
 ZOMBIE_IMAGE_RECT = 'zombie_image_rect'
 ZOMBIE_HEAD = 'ZombieHead'
 NORMAL_ZOMBIE = 'Zombie'
@@ -158,7 +160,7 @@ ZOMBIE_WALK_INTERVAL = 70
 
 ZOMBIE_START_X = SCREEN_WIDTH + 50
 
-#STATE
+# STATE
 IDLE = 'idle'
 FLY = 'fly'
 EXPLODE = 'explode'
@@ -171,10 +173,10 @@ CRY = 'cry'
 FREEZE = 'freeze'
 SLEEP = 'sleep'
 
-#LEVEL STATE
+# LEVEL STATE
 CHOOSE = 'choose'
 PLAY = 'play'
 
-#BACKGROUND
+# BACKGROUND
 BACKGROUND_DAY = 0
 BACKGROUND_NIGHT = 1
