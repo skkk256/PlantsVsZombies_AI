@@ -37,6 +37,15 @@ class Screen(tool.State):
             surface.blit(self.image, self.rect)
         else:
             self.done = True
+    def updateByAction(self, surface, current_time, action):
+        if(current_time - self.start_time) < self.end_time:
+            surface.fill(c.WHITE)
+            surface.blit(self.image, self.rect)
+        else:
+            self.done = True
+
+    def getGameState(self):
+        return "end"
 
 class GameVictoryScreen(Screen):
     def __init__(self):
@@ -56,4 +65,4 @@ class GameLoseScreen(Screen):
         return c.GAME_LOOSE_IMAGE
     
     def set_next_state(self):
-        return c.MAIN_MENU
+        return c.LEVEL

@@ -98,14 +98,13 @@ class Level(tool.State):
             _, y = self.map.getMapGridPos(0, i)
             self.cars.append(plant.Car(-25, y + 20, i))
 
-    def update(self, current_time, mouse_pos, mouse_click):
+    def update(self, surface, current_time, mouse_pos, mouse_click):
         self.current_time = self.game_info[c.CURRENT_TIME] = current_time
         if self.state == c.CHOOSE:
             self.choose(mouse_pos, mouse_click)
         elif self.state == c.PLAY:
             self.play(mouse_pos, mouse_click)
 
-    def render(self, surface):
         self.draw(surface)
 
     def initBowlingMap(self):
@@ -122,7 +121,7 @@ class Level(tool.State):
 
         if self.bar_type == c.CHOOSEBAR_STATIC:
             if self.map_data.get("use_default"):
-                self.initPlay([0, 1, 2, 3, 4, 6, 9, 7])
+                self.initPlay([c.CARD_SUNFLOWER_INDEX, c.CARD_POTATOMINE_INDEX, c.CARD_PEASHOOTER_INDEX, c.CARD_WALLNUTS_INDEX])
             else:
                 self.initChoose()
         else:
@@ -193,7 +192,14 @@ class Level(tool.State):
                 if self.menubar.checkMenuBarClick(mouse_pos):
                     self.removeMouseImage()
                 else:
-                    self.addPlant()
+                    pos = self.canSeedPlant()
+                    if pos is None:
+                        return
+                    if self.hint_image is None:
+                        self.setupHintImage()
+                    x, y = self.hint_rect.centerx, self.hint_rect.bottom
+                    map_x, map_y = self.map.getMapIndex(x, y)
+                    self.addPlant(self.plant_name, self.select_plant.sun_cost, x, y, map_x, map_y)
             elif mouse_pos is None:
                 self.setupHintImage()
 
@@ -236,62 +242,52 @@ class Level(tool.State):
         x, y = pg.mouse.get_pos()
         return self.map.showPlant(x, y)
 
-    def addPlant(self):
-        pos = self.canSeedPlant()
-        if pos is None:
-            return
-
-        if self.hint_image is None:
-            self.setupHintImage()
-        x, y = self.hint_rect.centerx, self.hint_rect.bottom
-        map_x, map_y = self.map.getMapIndex(x, y)
-        if self.plant_name == c.SUNFLOWER:
+    def addPlant(self, plant_name, plant_cost, x, y, map_x, map_y):
+        if plant_name == c.SUNFLOWER:
             new_plant = plant.SunFlower(x, y, self.sun_group)
-        elif self.plant_name == c.PEASHOOTER:
+        elif plant_name == c.PEASHOOTER:
             new_plant = plant.PeaShooter(x, y, self.bullet_groups[map_y])
-        elif self.plant_name == c.SNOWPEASHOOTER:
+        elif plant_name == c.SNOWPEASHOOTER:
             new_plant = plant.SnowPeaShooter(x, y, self.bullet_groups[map_y])
-        elif self.plant_name == c.WALLNUT:
+        elif plant_name == c.WALLNUT:
             new_plant = plant.WallNut(x, y)
-        elif self.plant_name == c.CHERRYBOMB:
+        elif plant_name == c.CHERRYBOMB:
             new_plant = plant.CherryBomb(x, y)
-        elif self.plant_name == c.THREEPEASHOOTER:
+        elif plant_name == c.THREEPEASHOOTER:
             new_plant = plant.ThreePeaShooter(x, y, self.bullet_groups, map_y)
-        elif self.plant_name == c.REPEATERPEA:
+        elif plant_name == c.REPEATERPEA:
             new_plant = plant.RepeaterPea(x, y, self.bullet_groups[map_y])
-        elif self.plant_name == c.CHOMPER:
+        elif plant_name == c.CHOMPER:
             new_plant = plant.Chomper(x, y)
-        elif self.plant_name == c.PUFFSHROOM:
+        elif plant_name == c.PUFFSHROOM:
             new_plant = plant.PuffShroom(x, y, self.bullet_groups[map_y])
-        elif self.plant_name == c.POTATOMINE:
+        elif plant_name == c.POTATOMINE:
             new_plant = plant.PotatoMine(x, y)
-        elif self.plant_name == c.SQUASH:
+        elif plant_name == c.SQUASH:
             new_plant = plant.Squash(x, y)
-        elif self.plant_name == c.SPIKEWEED:
+        elif plant_name == c.SPIKEWEED:
             new_plant = plant.Spikeweed(x, y)
-        elif self.plant_name == c.JALAPENO:
+        elif plant_name == c.JALAPENO:
             new_plant = plant.Jalapeno(x, y)
-        elif self.plant_name == c.SCAREDYSHROOM:
+        elif plant_name == c.SCAREDYSHROOM:
             new_plant = plant.ScaredyShroom(x, y, self.bullet_groups[map_y])
-        elif self.plant_name == c.SUNSHROOM:
+        elif plant_name == c.SUNSHROOM:
             new_plant = plant.SunShroom(x, y, self.sun_group)
-        elif self.plant_name == c.ICESHROOM:
+        elif plant_name == c.ICESHROOM:
             new_plant = plant.IceShroom(x, y)
-        elif self.plant_name == c.HYPNOSHROOM:
+        elif plant_name == c.HYPNOSHROOM:
             new_plant = plant.HypnoShroom(x, y)
-        elif self.plant_name == c.WALLNUTBOWLING:
+        elif plant_name == c.WALLNUTBOWLING:
             new_plant = plant.WallNutBowling(x, y, map_y, self)
-        elif self.plant_name == c.REDWALLNUTBOWLING:
+        elif plant_name == c.REDWALLNUTBOWLING:
             new_plant = plant.RedWallNutBowling(x, y)
 
         if new_plant.can_sleep and self.background_type == c.BACKGROUND_DAY:
             new_plant.setSleep()
         self.plant_groups[map_y].add(new_plant)
         if self.bar_type == c.CHOOSEBAR_STATIC:
-            self.menubar.decreaseSunValue(self.select_plant.sun_cost)
-            self.menubar.setCardFrozenTime(self.plant_name)
-        else:
-            self.menubar.deleateCard(self.select_plant)
+            self.menubar.decreaseSunValue(plant_cost)
+            self.menubar.setCardFrozenTime(plant_name)
 
         if self.bar_type != c.CHOSSEBAR_BOWLING:
             self.map.setMapGridType(map_x, map_y, c.MAP_EXIST)

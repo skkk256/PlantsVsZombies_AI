@@ -27,6 +27,9 @@ SIZE_MULTIPLIER = 1.3
 
 # AI_AGENT
 MOUSE_AGENT = "MouseAgent"
+RANDOM_AGENT = "RandomAgent"
+BLANK = "Blank"
+IDLE = "idel"
 
 # GAME INFO DICTIONARY KEYS
 CURRENT_TIME = 'current time'
@@ -131,6 +134,12 @@ CARD_SUNSHROOM = 'card_sunshroom'
 CARD_ICESHROOM = 'card_iceshroom'
 CARD_HYPNOSHROOM = 'card_hypnoshroom'
 CARD_REDWALLNUT = 'card_redwallnut'
+
+# CARD INDEX
+CARD_SUNFLOWER_INDEX = 0
+CARD_PEASHOOTER_INDEX = 1
+CARD_WALLNUTS_INDEX = 3
+CARD_POTATOMINE_INDEX = 9
 
 # BULLET INFO
 BULLET_PEA = 'PeaNormal'

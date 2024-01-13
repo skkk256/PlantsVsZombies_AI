@@ -255,6 +255,14 @@ class Sun(Plant):
             return True
         return False
 
+    def getSun(self):
+        if self.state == c.DIE:
+            return False
+        self.state = c.DIE
+        self.kill()
+        return True
+
+
 class SunFlower(Plant):
     def __init__(self, x, y, sun_group):
         Plant.__init__(self, x, y, c.SUNFLOWER, c.PLANT_HEALTH, None)

@@ -140,6 +140,7 @@ class MenuBar():
         self.sun_value = sun_value
         self.card_offset_x = 32
         self.setupCards(card_list)
+        self.current_time = 0
 
     def loadFrame(self, name):
         frame = tool.GFX[name]
@@ -206,7 +207,7 @@ class MenuBar():
                 break
 
     def getAvailability(self):
-        return [(card.getTimeLeft(self.current_time), card.sun_cost) for card in self.card_list]
+        return [(plant_name_list[card.name_index], card.getTimeLeft(self.current_time), card.sun_cost) for card in self.card_list]
 
     def drawSunValue(self):
         self.value_image = getSunValueImage(self.sun_value)
