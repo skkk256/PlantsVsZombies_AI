@@ -121,7 +121,7 @@ class Level(tool.State):
 
         if self.bar_type == c.CHOOSEBAR_STATIC:
             if self.map_data.get("use_default"):
-                self.initPlay([c.CARD_SUNFLOWER_INDEX, c.CARD_POTATOMINE_INDEX, c.CARD_PEASHOOTER_INDEX, c.CARD_WALLNUTS_INDEX])
+                self.initPlay([c.CARD_SUNFLOWER_INDEX, c.CARD_CHERRYBOMB_INDEX, c.CARD_PEASHOOTER_INDEX, c.CARD_WALLNUTS_INDEX])
             else:
                 self.initChoose()
         else:
