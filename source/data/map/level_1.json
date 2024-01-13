@@ -1,6 +1,6 @@
 {
     "background_type":0,
-    "init_sun_value":50,
+    "init_sun_value":5000,
     "choosebar_type":0,
     "use_default": true,
     "zombie_list":[

@@ -8,8 +8,8 @@ Proposal report: https://docs.qq.com/slide/DZk9qTk9vWWJKS29Y
 
 ## TODO
 - [ ] 分成 GameState, Agent, GameRunner 三部分
-- [ ] 四种植物: 豌豆射手、向日葵、土豆地雷、坚果墙, 一种僵尸, state ( 每个格子上的植物、每个格子上的僵尸血量总和、可用植物类型、阳光数 )
-  - min-max
+- [ ] 四种植物: 豌豆射手、向日葵、土豆地雷、坚果墙, 僵尸只有血量和行动速度区别, state ( 每个格子上的植物、每个格子上的僵尸血量总和、可用植物状态、阳光数 )
+  - logic-based method
   - Q-learning
   - [Deep Q-network](https://hanadyg.github.io/portfolio/report/INF581_report.pdf)
 - [ ] [option] 更多植物和更多种类僵尸
@@ -28,11 +28,14 @@ Proposal report: https://docs.qq.com/slide/DZk9qTk9vWWJKS29Y
 ## AI Agent
 ```
 ├── agents
-│   ├── 
-│   ├── 
+│   ├── env.py       # 环境状态，游戏更新相关
+│   ├── agent.py     # 智能体实现
 │   ├── 
 │    ...
 
 ```
+
+## 已知 Bug
+- 土豆地雷不会爆炸 ( 原版就有，pygame碰撞检测问题 )
 
 

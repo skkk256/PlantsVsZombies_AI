@@ -2,7 +2,8 @@ __author__ = 'marble_xu'
 
 from . import constants as c
 from .state import mainmenu, screen, level
-from .agents.agent import GameState, GameRunner, Agent
+from .agents.env import GameState, GameRunner
+from .agents.agent import Agent
 
 
 def main():

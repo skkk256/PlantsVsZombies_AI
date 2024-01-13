@@ -49,7 +49,7 @@ class Control():
     #     self.state_name = start_state
     #     self.state = self.state_dict[self.state_name]
     #     self.state.startup(self.current_time, self.game_info)
-
+    #
     # def update(self):
     #     self.current_time = pg.time.get_ticks()
     #     if self.state.done:
@@ -72,7 +72,6 @@ class Control():
                 self.done = True
             elif event.type == pg.KEYDOWN:
                 self.keys = pg.key.get_pressed()
-                print(self.state)
             elif event.type == pg.KEYUP:
                 self.keys = pg.key.get_pressed()
             elif event.type == pg.MOUSEBUTTONDOWN:

@@ -118,6 +118,10 @@ class Card():
             image = self.orig_image
         return image
 
+    def getTimeLeft(self, current_time):
+        time = current_time - self.frozen_timer
+        return max(self.frozen_time - time, 0)
+
     def update(self, sun_value, current_time):
         if (current_time - self.refresh_timer) >= 250:
             self.image = self.createShowImage(sun_value, current_time)
@@ -200,6 +204,9 @@ class MenuBar():
             if plant_name_list[card.name_index] == plant_name:
                 card.setFrozenTime(self.current_time)
                 break
+
+    def getAvailability(self):
+        return [(card.getTimeLeft(self.current_time), card.sun_cost) for card in self.card_list]
 
     def drawSunValue(self):
         self.value_image = getSunValueImage(self.sun_value)
