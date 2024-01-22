@@ -5,7 +5,7 @@ import argparse
 def config_parser():
     parser = argparse.ArgumentParser(description='plant vs zombies')
     parser.add_argument('--level', type=int, default=1, help='level of game') # 事实上僵尸出现应该是随机的
-    parser.add_argument('--agent_type', type=str, default='random', choices=['random', 'manual', 'logic', 'DQN'])
+    parser.add_argument('--agent_type', type=str, default='random')
     parser.add_argument('--game_speed', type=float, default=1.0, help='running speed of game')
 
     return parser
