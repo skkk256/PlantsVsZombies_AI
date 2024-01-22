@@ -19,7 +19,7 @@ def main(args):
     elif args.agent_type == 'manual':
         agent = Agent(c.MOUSE_AGENT)
     elif args.agent_type == 'local':
-        agent = LocalAgent(c.RANDOM_AGENT)
+        agent = LocalAgent(c.LOACL_AGENT)
     
     else:
         agent = RandomAgent(c.RANDOM_AGENT)

@@ -28,6 +28,7 @@ SIZE_MULTIPLIER = 1.3
 # AI_AGENT
 MOUSE_AGENT = "MouseAgent"
 RANDOM_AGENT = "RandomAgent"
+LOACL_AGENT = "LocalAgent"
 BLANK = "Blank"
 IDLE = "idel"
 
