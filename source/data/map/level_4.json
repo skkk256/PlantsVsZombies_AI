@@ -1,15 +1,8 @@
 {
-    "background_type":0,
-    "choosebar_type":1,
-    "card_pool":[
-        {"name":"Peashooter"},
-        {"name":"SnowPea"},
-        {"name":"WallNut"},
-        {"name":"CherryBomb"},
-        {"name":"RepeaterPea"},
-        {"name":"Chomper"},
-        {"name":"PotatoMine"}
-    ],
+    "background_type":1,
+    "init_sun_value":50,
+    "choosebar_type":0,
+    "use_default": true,
     "zombie_list":[
         {"time": 1000, "map_y":1, "name":"Zombie"},
         {"time": 6000, "map_y":3, "name":"FlagZombie"},

@@ -183,7 +183,7 @@ class LocalAgent(Agent):
                     if grid_state[choose_line][j][1] > 0 and sun_value >= 50 and plants[c.WALLNUT][0] == 0:
                         return Action(c.WALLNUT, 50, j, choose_line)
                 
-            return Action(c.BLANK, 0, 0, 0)
+            return Action(c.IDLE, 0, 0, 0)
         #Else smaller we turn into preparation action
         else:
             #If we enter preparation action, we choose a line that has the smallest sunflowers or the least dangerous, to plant a sunflower
@@ -198,7 +198,7 @@ class LocalAgent(Agent):
                 place = store.get()[1]
                 return Action(c.SUNFLOWER, 50, place[1], place[0])
             else:
-                return Action(c.BLANK, 0, 0, 0)
+                return Action(c.IDLE, 0, 0, 0)
     
     def reflex(self, state: GameState):
         # TODO

@@ -1,6 +1,8 @@
 {
     "background_type":1,
     "init_sun_value":50,
+    "choosebar_type":0,
+    "use_default": true,
     "zombie_list":[
         {"time":20000, "map_y":0, "name":"Zombie"},
         {"time":40000, "map_y":2, "name":"ConeheadZombie"},
