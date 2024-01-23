@@ -56,11 +56,12 @@ class GameState(Level):
 
     def updateByAction(self, surface, current_time, action):
         self.current_time = self.game_info[c.CURRENT_TIME] = current_time
-        map_x, map_y = action.x, action.y
+        map_x, map_y = action.y, action.x # 为什么这里是反的? 因为在level中, x是行, y是列, 而在map中, x是列, y是行, 一开始看错了写反了
         plant_name = action.plant_name
         plant_cost = action.plant_cost
         x, y = self.map.getMapGridPos(map_x, map_y)
         if self.map.isValid(map_x, map_y) and self.map.isMovable(map_x, map_y) and plant_name != c.IDLE:
+            # print(action.x, action.y)
             self.addPlant(plant_name, plant_cost, x, y, map_x, map_y)
 
         self.updateEnvironment()

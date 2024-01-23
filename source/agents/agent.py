@@ -5,6 +5,7 @@ import random
 import queue
 import pdb
 import numpy as np
+
 class Action:
     def __init__(self, plant_name, cost, x, y):
         self.plant_cost = cost
@@ -39,6 +40,9 @@ class RandomAgent(Agent):
         sun_value = gameState["sun_value"]
         plant_availability = gameState["plant_availability"]  # [(plant_name, frozen_time, sun_cost), ..., ]
         grid_state = gameState["grid_state"] # 5*10 list, entry: [ (plant_name, hp), zombie_hp ]
+
+        # print(grid_state)
+
         if current_time - self.play_time >= self.play_interval:
             self.play_time = current_time
             available_plant = []
