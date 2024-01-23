@@ -39,7 +39,6 @@ class RandomAgent(Agent):
         sun_value = gameState["sun_value"]
         plant_availability = gameState["plant_availability"]  # [(plant_name, frozen_time, sun_cost), ..., ]
         grid_state = gameState["grid_state"] # 5*10 list, entry: [ (plant_name, hp), zombie_hp ]
-        print(grid_state)
         if current_time - self.play_time >= self.play_interval:
             self.play_time = current_time
             available_plant = []
@@ -106,7 +105,7 @@ class LocalAgent(Agent):
                 if plant_name == c.WALLNUT:
                     value /= grid[0][1]/10
                 if plant_name == c.PEASHOOTER:
-                    value -= 10
+                    value -= 5
                 if value < 0:
                     value = 0
                 values[i][j] = value
@@ -118,7 +117,7 @@ class LocalAgent(Agent):
             
         #If bigger, then turn into defence action
         thres = 5
-        if max_value >= thres or total_sunflowers >= 10:
+        if max_value >= thres or total_sunflowers >= 6:
             store = queue.PriorityQueue()
             choose_line = 0
             least = 0
@@ -128,6 +127,18 @@ class LocalAgent(Agent):
                     choose_line = i
                     least = values[i][0]
             #If there are lines that have zombie we can't kill, then plant peashoter first
+            
+            max_zombie = 0
+            max_i = 0
+            max_j = 0
+            for i in range(5):
+                for j in range(9):
+                    if grid_state[i][j][1] > max_zombie:
+                        max_zombie = grid_state[i][j][1]
+                        max_i = i
+                        max_j = j
+            if max_zombie >= 20 and sun_value >= 50 and plants[c.CHERRYBOMB][0] == 0 and grid_state[max_i][max_j][0][0] == c.BLANK:
+                return Action(c.CHERRYBOMB, 50, max_i, max_j)
             if least > 0:
                 for j in range(9):
                     if grid_state[choose_line][j][0][0] == c.BLANK:
@@ -152,7 +163,7 @@ class LocalAgent(Agent):
                             if plant_name == c.PEASHOOTER:
                                 value -= 10
                             if k == j:
-                                value -= 10
+                                value -= 5
                             if value < 0:
                                 value = 0
                             new_line_value[k] = value
@@ -161,11 +172,17 @@ class LocalAgent(Agent):
                         #If all values are equal to zero, then we use the average value among one single line
                         #Also if this has no change, then we try to plant the peashoter
                 #If we dicide to plant peashoter
+
                 if store.empty() == False:
                     action = store.get()
+                    if sun_value < 100 or plants[c.PEASHOOTER][0] != 0:
+                       for kk in range(9):
+                            choose_line = action[3]
+                            if grid_state[choose_line][kk][0][0] == c.BLANK and grid_state[choose_line][kk][1]>0 and sun_value >= 50 and plants[c.WALLNUT][0] == 0:
+                                return Action(c.WALLNUT, 50, choose_line, kk) 
                     if action[1] == c.PEASHOOTER and sun_value >= 100 and plants[c.PEASHOOTER][0] == 0:
-                        return Action(c.PEASHOOTER, 100, action[2], action[3])
-            
+                        return Action(c.PEASHOOTER, 100, action[3], action[2])
+                        
             #Else we dicide to plant wallnut
             #Similar to before, we assume each blank box to have a wallnut, then compare the average value in a line to dicide where to put
             else:
@@ -181,7 +198,7 @@ class LocalAgent(Agent):
                         choose_line = i
                 for j in range(9):
                     if grid_state[choose_line][j][1] > 0 and sun_value >= 50 and plants[c.WALLNUT][0] == 0:
-                        return Action(c.WALLNUT, 50, j, choose_line)
+                        return Action(c.WALLNUT, 50, choose_line, j)
                 
             return Action(c.IDLE, 0, 0, 0)
         #Else smaller we turn into preparation action
@@ -196,7 +213,7 @@ class LocalAgent(Agent):
             
             if sun_value >=50 and plants[c.SUNFLOWER][0] == 0:
                 place = store.get()[1]
-                return Action(c.SUNFLOWER, 50, place[1], place[0])
+                return Action(c.SUNFLOWER, 50, place[0], place[1])
             else:
                 return Action(c.IDLE, 0, 0, 0)
     
