@@ -1,17 +1,19 @@
 from abc import abstractmethod
 from .. import constants as c
 from source.agents.env import GameState
+from kanren import Relation, facts, run, conde, var
 import random
 import queue
 import pdb
 import numpy as np
 import sys
 
-try:
-    from kanren import Relation, facts, run, conde, var
-except Exception as e:
-    print(e)
-
+sun_cost = {
+    c.SUNFLOWER : 50,
+    c.PEASHOOTER: 100,
+    c.WALLNUT : 50,
+    c.CHERRYBOMB: 150
+}
 
 class Action:
     def __init__(self, plant_name, cost, x, y):
@@ -223,11 +225,13 @@ class LogicAgent(Agent):
         facts(self.action_for_alert_level, ("relax", c.SUNFLOWER), 
                                          ("alert", c.PEASHOOTER), 
                                          ("defense", c.WALLNUT), 
-                                         ("critical", c.CHERRY_BOOM_IMAGE))
+                                         ("critical", c.CHERRYBOMB))
 
-        facts(self.plant_for_sun_state, ("poor", c.SUNFLOWER), 
+        facts(self.plant_for_sun_state, ("Nothing", c.IDLE),
+                                        ("poor", c.SUNFLOWER), 
                                         ("medium", c.SUNFLOWER), 
                                         ("medium", c.PEASHOOTER), 
+                                        ("medium", c.WALLNUT),
                                         ("rich", c.SUNFLOWER), 
                                         ("rich",  c.PEASHOOTER), 
                                         ("rich", c.WALLNUT), 
@@ -245,33 +249,45 @@ class LogicAgent(Agent):
                 if plant[0] != c.BLANK:
                     facts(self.plant_at, (row, col))
 
-    def alarm_system(self, grid_state):
-        weights = [5, 4, 3, 2, 1, 0.9, 0.8, 0.5, 0.4, 0.3]
+    def alarm_system(self, grid_state, sun_value, plant_availability):
+        weights = [8, 6, 3, 2, 1.5, 1.5, 1, 0.5, 0.4, 0.3]
         alert_scores = [0] * len(grid_state)
 
         for row in range(len(grid_state)):
             for col in range(len(grid_state[row])):
                 _, zombie_hp = grid_state[row][col]
-                if zombie_hp > 0:
+                if  0 < zombie_hp < 15:
                     alert_scores[row] += weights[col]
+                elif zombie_hp >= 15:
+                    alert_scores[row] += weights[col] * 1.2
+                
+        
 
         highest_alert_score = max(alert_scores)
-        if highest_alert_score == 0:
+        if highest_alert_score <= 0:
             return 'relax'
         elif 0.5 <= highest_alert_score <= 3:
+            if sun_value < 100:
+                return "defense"
             return 'alert'
         elif highest_alert_score == 4:
+            if plant_availability[3][1] != 0:
+                return "defense"
             return 'defense'
         elif highest_alert_score > 4:
+            if plant_availability[1][1] != 0:
+                return "defense"
             return 'critical'
         return 'relax'
 
     def get_sun_state(self, sun_value):
         if sun_value < 50:
+            return "Nothing"
+        elif sun_value == 50:
             return 'poor'
         elif 50 <= sun_value < 100:
             return 'medium'
-        elif 100 <= sun_value < 150:
+        elif 100 <= sun_value:
             return 'rich'
         else:
             return 'none'
@@ -282,13 +298,88 @@ class LogicAgent(Agent):
                 return True
         return False
 
-    def get_plant_position(self, grid_state, plant_name):
-        for row in range(len(grid_state)):
-            for col in range(len(grid_state[row])):
-                plant, _ = grid_state[row][col]
+    
+    def get_plant_position(self, grid_state, alert_level):
+        print(alert_level)
+        if alert_level == 'relax':
+            alert_scores = [0] * len(grid_state)
+            #print("列状态检查：")
+            #for col in range(len(grid_state[0])):
+            #    print(f"列 {col}: {grid_state[0][col]}")
+            # 计算每一行的警报分数
+            for row in range(len(grid_state)):
+                sunflower_num = 0
+                for col in range(len(grid_state[row])):
+                    plant_group, zombie_hp = grid_state[row][col]
+                    plant_name, plant_hp = plant_group
+                    if plant_name == c.SUNFLOWER:
+                        sunflower_num += 1 
+
+                alert_scores[row] -= sunflower_num 
+            print(alert_scores)
+            chosen_row = alert_scores.index(max(alert_scores))
+            for col in range(9):
+                plant, _ = grid_state[chosen_row][col]
                 if plant[0] == c.BLANK:
-                    return (row, col)
-        return None
+                    return chosen_row,col
+
+        elif alert_level == 'alert':
+            # 对于 'relax' 和 'alert'，选择最近的空列（从第一列开始）
+            weights = [5, 4, 3, 2, 1.5, 1.5, 1, 0.5, 0.4, 0.3]
+            alert_scores = [0] * len(grid_state)
+            #print("列状态检查：")
+            #for col in range(len(grid_state[0])):
+            #    print(f"列 {col}: {grid_state[0][col]}")
+            # 计算每一行的警报分数
+            for row in range(len(grid_state)):
+                peashooter_num = 0
+                sunflower_num = 0
+                for col in range(len(grid_state[row])):
+                    plant_group, zombie_hp = grid_state[row][col]
+                    plant_name, plant_hp = plant_group
+                    if zombie_hp > 0:
+                        alert_scores[row] += weights[col]
+                    if plant_name == c.SUNFLOWER:
+                        sunflower_num += plant_hp * 0.1
+                    elif plant_name == c.PEASHOOTER:
+                        peashooter_num += plant_hp * 0.1
+                if peashooter_num == 0:
+                    alert_scores[row] += 4
+                alert_scores[row] -= sunflower_num * 0.05
+                alert_scores[row] -= peashooter_num * 0.5
+
+            # 选择警报程度最高的行
+            print(alert_scores)
+            chosen_row = alert_scores.index(max(alert_scores))
+            for col in range(9):
+                plant, _ = grid_state[chosen_row][col]
+                if plant[0] == c.BLANK:
+                    return chosen_row,col
+        else:
+            weights = [5, 4, 3, 2, 1, 0.9, 0.8, 0.5, 0.4, 0.3]
+            alert_scores = [0] * len(grid_state)
+            #print("列状态检查：")
+            #for col in range(len(grid_state[0])):
+            #    print(f"列 {col}: {grid_state[0][col]}")
+            # 计算每一行的警报分数
+            for row in range(len(grid_state)):
+                for col in range(len(grid_state[row])):
+                    _, zombie_hp = grid_state[row][col]
+                    if zombie_hp > 0:
+                        alert_scores[row] += weights[col]
+
+            # 选择警报程度最高的行
+            print(alert_scores)
+            chosen_row = alert_scores.index(max(alert_scores))
+            # 对于 'defense' 和 'critical'，选择有僵尸的列
+            for col in range(9):
+                _, zombie_hp = grid_state[chosen_row][col]
+                if zombie_hp > 0:
+                    return chosen_row, col
+
+        return None  # 如果没有找到合适的位置，返回 None
+
+
 
     def getAction(self, state: GameState, current_time):
         gameState = state.getGameState()
@@ -303,19 +394,25 @@ class LogicAgent(Agent):
         self.play_time = current_time
 
         self.update_KB(gameState)
-        alert_level = self.alarm_system(grid_state)
+        alert_level = self.alarm_system(grid_state, sun_value, plant_availability)
         sun_state = self.get_sun_state(sun_value)
-
+        
         action = var()
         possible_actions = run(0, action, self.action_for_alert_level(alert_level, action))
+        # print(possible_actions)
         x=var()
         for act in possible_actions:
             # print(act)
             # print(f"plant, {run(0, x, self.plant_for_sun_state(sun_state, x))}")
             # print(self.plant_available(act, plant_availability))
+            # print(self.get_plant_position(grid_state, alert_level))
+            # print('警报')
+            # print(alert_level)
             if act in run(0, x, self.plant_for_sun_state(sun_state, x)) and \
-               self.plant_available(act, plant_availability):
-                position = self.get_plant_position(grid_state, act)
+               self.plant_available(act, plant_availability) and sun_value >= sun_cost[act]:
+                position = self.get_plant_position(grid_state, alert_level)
+                if position is None:
+                    print(possible_actions)
                 if position is not None:
                     row, col = position
                     if act == c.SUNFLOWER:
@@ -326,8 +423,9 @@ class LogicAgent(Agent):
                         cost = 50
                     elif act == c.CHERRYBOMB:
                         cost = 175
-                    return Action(act, cost, row, col)
-        
+                    
+                    print(act, row, col)
+                    return Action(act, cost, row,col)
         return Action(c.IDLE, 0, 0, 0)
 
 class DQNAgent(Agent):
