@@ -357,7 +357,7 @@ class WallNut(Plant):
 
 class CherryBomb(Plant):
     def __init__(self, x, y):
-        Plant.__init__(self, x, y, c.CHERRYBOMB, c.WALLNUT_HEALTH, None)
+        Plant.__init__(self, x, y, c.CHERRYBOMB, 10000, None)
         self.state = c.ATTACK
         self.start_boom = False
         self.bomb_timer = 0

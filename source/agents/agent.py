@@ -21,7 +21,7 @@ class Agent:
     def __init__(self, agentType=c.MOUSE_AGENT):
         self.agentType = agentType
         self.play_time = 0
-        self.play_interval = 1000
+        self.play_interval = 200
 
     @abstractmethod
     def getAction(self, state: GameState, current_time):
@@ -242,3 +242,13 @@ class DQNAgent(Agent):
 # We assume each line to be a Q-learning and compute value for each box
 # Give each box a value and search the maximum step
 # 
+
+
+class LLMQAgent(Agent):
+    def getAction(self, state: GameState, current_time):
+        # TODO
+        ...
+
+    def reflex(self, state: GameState):
+        # TODO
+        ...

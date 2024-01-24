@@ -4,6 +4,7 @@ import os
 import json
 from abc import abstractmethod
 import pygame as pg
+from pygame import mixer
 from . import constants as c
 
 
@@ -177,6 +178,9 @@ def loadPlantImageRect():
 
 
 pg.init()
+mixer.music.load('source\\bgm.mp3')
+mixer.music.play(-1)
+
 pg.display.set_caption(c.ORIGINAL_CAPTION)
 SCREEN = pg.display.set_mode(c.SCREEN_SIZE)
 
