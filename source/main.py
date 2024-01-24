@@ -1,9 +1,7 @@
-__author__ = 'marble_xu'
-
 from . import constants as c
 from .state import mainmenu, screen, level
 from .agents.env import GameState, GameRunner
-from .agents.agent import Agent, RandomAgent, LocalAgent
+from .agents.agent import Agent, RandomAgent, LocalAgent, LogicAgent
 
 
 def main(args):
@@ -20,6 +18,8 @@ def main(args):
         agent = Agent(c.MOUSE_AGENT)
     elif args.agent_type == 'local':
         agent = LocalAgent(c.LOACL_AGENT)
+    elif args.agent_type == "logic":
+        agent = LogicAgent("logicAgent")
     
     else:
         agent = RandomAgent(c.RANDOM_AGENT)

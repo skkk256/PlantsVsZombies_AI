@@ -5,6 +5,13 @@ import random
 import queue
 import pdb
 import numpy as np
+import sys
+
+try:
+    from kanren import Relation, facts, run, conde, var
+except Exception as e:
+    print(e)
+
 
 class Action:
     def __init__(self, plant_name, cost, x, y):
@@ -40,9 +47,6 @@ class RandomAgent(Agent):
         sun_value = gameState["sun_value"]
         plant_availability = gameState["plant_availability"]  # [(plant_name, frozen_time, sun_cost), ..., ]
         grid_state = gameState["grid_state"] # 5*10 list, entry: [ (plant_name, hp), zombie_hp ]
-
-        # print(grid_state)
-
         if current_time - self.play_time >= self.play_interval:
             self.play_time = current_time
             available_plant = []
@@ -109,7 +113,7 @@ class LocalAgent(Agent):
                 if plant_name == c.WALLNUT:
                     value /= grid[0][1]/10
                 if plant_name == c.PEASHOOTER:
-                    value -= 5
+                    value -= 10
                 if value < 0:
                     value = 0
                 values[i][j] = value
@@ -121,7 +125,7 @@ class LocalAgent(Agent):
             
         #If bigger, then turn into defence action
         thres = 5
-        if max_value >= thres or total_sunflowers >= 6:
+        if max_value >= thres or total_sunflowers >= 10:
             store = queue.PriorityQueue()
             choose_line = 0
             least = 0
@@ -131,18 +135,6 @@ class LocalAgent(Agent):
                     choose_line = i
                     least = values[i][0]
             #If there are lines that have zombie we can't kill, then plant peashoter first
-            
-            max_zombie = 0
-            max_i = 0
-            max_j = 0
-            for i in range(5):
-                for j in range(9):
-                    if grid_state[i][j][1] > max_zombie:
-                        max_zombie = grid_state[i][j][1]
-                        max_i = i
-                        max_j = j
-            if max_zombie >= 20 and sun_value >= 50 and plants[c.CHERRYBOMB][0] == 0 and grid_state[max_i][max_j][0][0] == c.BLANK:
-                return Action(c.CHERRYBOMB, 50, max_i, max_j)
             if least > 0:
                 for j in range(9):
                     if grid_state[choose_line][j][0][0] == c.BLANK:
@@ -167,7 +159,7 @@ class LocalAgent(Agent):
                             if plant_name == c.PEASHOOTER:
                                 value -= 10
                             if k == j:
-                                value -= 5
+                                value -= 10
                             if value < 0:
                                 value = 0
                             new_line_value[k] = value
@@ -176,17 +168,11 @@ class LocalAgent(Agent):
                         #If all values are equal to zero, then we use the average value among one single line
                         #Also if this has no change, then we try to plant the peashoter
                 #If we dicide to plant peashoter
-
                 if store.empty() == False:
                     action = store.get()
-                    if sun_value < 100 or plants[c.PEASHOOTER][0] != 0:
-                       for kk in range(9):
-                            choose_line = action[3]
-                            if grid_state[choose_line][kk][0][0] == c.BLANK and grid_state[choose_line][kk][1]>0 and sun_value >= 50 and plants[c.WALLNUT][0] == 0:
-                                return Action(c.WALLNUT, 50, choose_line, kk) 
                     if action[1] == c.PEASHOOTER and sun_value >= 100 and plants[c.PEASHOOTER][0] == 0:
-                        return Action(c.PEASHOOTER, 100, action[3], action[2])
-                        
+                        return Action(c.PEASHOOTER, 100, action[2], action[3])
+            
             #Else we dicide to plant wallnut
             #Similar to before, we assume each blank box to have a wallnut, then compare the average value in a line to dicide where to put
             else:
@@ -202,7 +188,7 @@ class LocalAgent(Agent):
                         choose_line = i
                 for j in range(9):
                     if grid_state[choose_line][j][1] > 0 and sun_value >= 50 and plants[c.WALLNUT][0] == 0:
-                        return Action(c.WALLNUT, 50, choose_line, j)
+                        return Action(c.WALLNUT, 50, j, choose_line)
                 
             return Action(c.IDLE, 0, 0, 0)
         #Else smaller we turn into preparation action
@@ -217,7 +203,7 @@ class LocalAgent(Agent):
             
             if sun_value >=50 and plants[c.SUNFLOWER][0] == 0:
                 place = store.get()[1]
-                return Action(c.SUNFLOWER, 50, place[0], place[1])
+                return Action(c.SUNFLOWER, 50, place[1], place[0])
             else:
                 return Action(c.IDLE, 0, 0, 0)
     
@@ -225,8 +211,124 @@ class LocalAgent(Agent):
         # TODO
         ...
 
-    # some functions
 
+class LogicAgent(Agent):
+    def __init__(self, agent_type):
+        super().__init__(agent_type)
+        self.zombie_at = Relation()
+        self.plant_at = Relation()
+        self.action_for_alert_level = Relation()
+        self.plant_for_sun_state = Relation()
+
+        facts(self.action_for_alert_level, ("relax", c.SUNFLOWER), 
+                                         ("alert", c.PEASHOOTER), 
+                                         ("defense", c.WALLNUT), 
+                                         ("critical", c.CHERRY_BOOM_IMAGE))
+
+        facts(self.plant_for_sun_state, ("poor", c.SUNFLOWER), 
+                                        ("medium", c.SUNFLOWER), 
+                                        ("medium", c.PEASHOOTER), 
+                                        ("rich", c.SUNFLOWER), 
+                                        ("rich",  c.PEASHOOTER), 
+                                        ("rich", c.WALLNUT), 
+                                        ("rich", c.CHERRYBOMB))
+
+    def update_KB(self, gameState):
+        self.zombie_at = Relation()
+        self.plant_at = Relation()
+
+        for row in range(len(gameState["grid_state"])):
+            for col in range(len(gameState["grid_state"][row])):
+                plant, zombie_hp = gameState["grid_state"][row][col]
+                if zombie_hp > 0:
+                    facts(self.zombie_at, (row, col))
+                if plant[0] != c.BLANK:
+                    facts(self.plant_at, (row, col))
+
+    def alarm_system(self, grid_state):
+        weights = [5, 4, 3, 2, 1, 0.9, 0.8, 0.5, 0.4, 0.3]
+        alert_scores = [0] * len(grid_state)
+
+        for row in range(len(grid_state)):
+            for col in range(len(grid_state[row])):
+                _, zombie_hp = grid_state[row][col]
+                if zombie_hp > 0:
+                    alert_scores[row] += weights[col]
+
+        highest_alert_score = max(alert_scores)
+        if highest_alert_score == 0:
+            return 'relax'
+        elif 0.5 <= highest_alert_score <= 3:
+            return 'alert'
+        elif highest_alert_score == 4:
+            return 'defense'
+        elif highest_alert_score > 4:
+            return 'critical'
+        return 'relax'
+
+    def get_sun_state(self, sun_value):
+        if sun_value < 50:
+            return 'poor'
+        elif 50 <= sun_value < 100:
+            return 'medium'
+        elif 100 <= sun_value < 150:
+            return 'rich'
+        else:
+            return 'none'
+
+    def plant_available(self, plant_name, plant_availability):
+        for plant, frozen_time, _ in plant_availability:
+            if plant == plant_name and frozen_time == 0:
+                return True
+        return False
+
+    def get_plant_position(self, grid_state, plant_name):
+        for row in range(len(grid_state)):
+            for col in range(len(grid_state[row])):
+                plant, _ = grid_state[row][col]
+                if plant[0] == c.BLANK:
+                    return (row, col)
+        return None
+
+    def getAction(self, state: GameState, current_time):
+        gameState = state.getGameState()
+        if gameState == "end":
+            return
+        sun_value = gameState["sun_value"]
+        plant_availability = gameState["plant_availability"]  # [(plant_name, frozen_time, sun_cost), ..., ]
+        grid_state = gameState["grid_state"] # 5*10 list, entry: [ (plant_name, hp), zombie_hp ]
+        if current_time - self.play_time < self.play_interval:
+            return Action(c.IDLE, 0, 0, 0)
+        
+        self.play_time = current_time
+
+        self.update_KB(gameState)
+        alert_level = self.alarm_system(grid_state)
+        sun_state = self.get_sun_state(sun_value)
+
+        action = var()
+        possible_actions = run(0, action, self.action_for_alert_level(alert_level, action))
+        x=var()
+        for act in possible_actions:
+            # print(act)
+            # print(f"plant, {run(0, x, self.plant_for_sun_state(sun_state, x))}")
+            # print(self.plant_available(act, plant_availability))
+            if act in run(0, x, self.plant_for_sun_state(sun_state, x)) and \
+               self.plant_available(act, plant_availability):
+                position = self.get_plant_position(grid_state, act)
+                if position is not None:
+                    row, col = position
+                    if act == c.SUNFLOWER:
+                        cost = 50
+                    elif act == c.PEASHOOTER:
+                        cost = 100
+                    elif act == c.WALLNUT:
+                        cost = 50
+                    elif act == c.CHERRYBOMB:
+                        cost = 175
+                    return Action(act, cost, row, col)
+        
+        return Action(c.IDLE, 0, 0, 0)
 
 class DQNAgent(Agent):
     def getAction(self, state: GameState, current_time):
