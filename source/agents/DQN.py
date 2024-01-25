@@ -144,14 +144,13 @@ average_rewards = []
 
 window_size = 50
 
-for episode in range(15000):
+for episode in range(50000):
     act_list = []
     epsilon = epsilon_by_episode(episode)
 
     game.setup_states(state_dict, c.LEVEL, DQNAgent(c.DQN_AGENT, epsilon))
     state = game.state.getGameState()
     print("episode:", episode, "epsilon:", epsilon)
-    rolling_sum = 0
     tot_reward = 0
     max_duaration = 1000000
     while not game.done and game.time < max_duaration:
@@ -165,11 +164,6 @@ for episode in range(15000):
         tot_reward += reward
     
     update_model()
-    rolling_sum += tot_reward
-    if (episode + 1) % window_size == 0:
-        average_reward = rolling_sum / window_size
-        average_rewards.append(average_reward)
-        rolling_sum = 0
     
     print("tot_time:", game.time)
     print("tot_reward:", tot_reward)
