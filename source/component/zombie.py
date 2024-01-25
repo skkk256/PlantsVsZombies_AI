@@ -7,7 +7,7 @@ from .. import constants as c
 class Zombie(pg.sprite.Sprite):
     def __init__(self, x, y, name, health, head_group=None, damage=1):
         pg.sprite.Sprite.__init__(self)
-        
+        self.max_health = health
         self.name = name
         self.frames = []
         self.frame_index = 0

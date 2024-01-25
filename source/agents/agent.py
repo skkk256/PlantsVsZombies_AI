@@ -1,19 +1,60 @@
 from abc import abstractmethod
 from .. import constants as c
-from source.agents.env import GameState
+from source.agents.env import GameState, process_state
 import random
 import queue
 import pdb
 import numpy as np
-class Action:
-    def __init__(self, plant_name, cost, x, y):
-        self.plant_cost = cost
-        self.plant_name = plant_name
-        self.x = x
-        self.y = y
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import os
+from .env import Action
 
-    def __str__(self):
-        return f"{self.plant_name}, ({self.x}, {self.y})"
+class DQN(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(DQN, self).__init__()
+        self.fc1 = nn.Linear(input_dim, 128)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, output_dim)
+    
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        return self.fc3(x)
+    
+def decode_action(action_id):
+    total_columns = 9
+    total_rows = 5
+    total_plants = 4
+
+    # Calculate the plant_id, column, and row
+    plant_id = action_id % total_plants
+    column = (action_id // total_plants) % total_columns
+    row = action_id // (total_plants * total_columns)
+    
+    return row, column, plant_id
+
+def encode_action(action):
+    plant_name = action.plant_name
+    if plant_name == c.SUNFLOWER:
+        plant_id = 0
+    elif plant_name == c.CHERRYBOMB:
+        plant_id = 1
+    elif plant_name == c.PEASHOOTER:
+        plant_id = 2
+    elif plant_name == c.WALLNUT:
+        plant_id = 3
+    else:
+        return 180
+    x = action.x
+    y = action.y
+    
+    action_id = 36*x + 4*y + plant_id
+    
+    return action_id
+
 
 
 class Agent:
@@ -35,11 +76,11 @@ class RandomAgent(Agent):
     def getAction(self, state: GameState, current_time):
         gameState = state.getGameState()
         if gameState == "end":
-            return
+            return Action(c.IDLE, 0, 0, 0)
         sun_value = gameState["sun_value"]
         plant_availability = gameState["plant_availability"]  # [(plant_name, frozen_time, sun_cost), ..., ]
         grid_state = gameState["grid_state"] # 5*10 list, entry: [ (plant_name, hp), zombie_hp ]
-        print(grid_state)
+        #print(grid_state)
         if current_time - self.play_time >= self.play_interval:
             self.play_time = current_time
             available_plant = []
@@ -54,12 +95,14 @@ class RandomAgent(Agent):
             if len(available_coordinate) > 0 and len(available_plant) > 0 and random.random() < 0.5:
                 plant = random.choice(available_plant)
                 coordinate = random.choice(available_coordinate)
+                #print(Action(plant[0], plant[2], coordinate[0], coordinate[1]))
                 return Action(plant[0], plant[2], coordinate[0], coordinate[1])
             else:
+                #print(c.IDLE, 0, 0, 0)
                 return Action(c.IDLE, 0, 0, 0)
         else:
+            #print(c.IDLE, 0, 0, 0)
             return Action(c.IDLE, 0, 0, 0)
-
 
 
 class LocalAgent(Agent):
@@ -208,16 +251,63 @@ class LocalAgent(Agent):
 
 
 class DQNAgent(Agent):
+    def __init__(self, agentType=c.DQN_AGENT, epsilon=0.01):
+        super(DQNAgent, self).__init__(agentType)
+        self.model = DQN(129, 181)
+        self.model.load_state_dict(torch.load('source/agents/dqn_model.pth'))
+        self.epsilon = epsilon
+    def act(self, state: GameState):
+        state = state.getGameState()
+        if(type(state) != dict):
+            return Action(c.IDLE, 0, 0, 0)
+        plant_availability = state["plant_availability"]
+        grid_state = state["grid_state"]
+        sun_value = state["sun_value"]
+        available_plants = [plant for plant in plant_availability if plant[1] == 0 and sun_value >= plant[2]]
+        available_coordinates = [(i, j) for i in range(5) for j in range(9) if grid_state[i][j][0][0] == c.BLANK]
+        
+        legal_actions = []
+                
+        for plant in available_plants:
+            plant_name = plant[0]
+            plant_id = None
+            if plant_name == c.SUNFLOWER:
+                plant_id = 0
+            elif plant_name == c.CHERRYBOMB:
+                plant_id = 1
+            elif plant_name == c.PEASHOOTER:
+                plant_id = 2
+            elif plant_name == c.WALLNUT:
+                plant_id = 3
+        
+            if plant_id is not None:
+                for coord in available_coordinates:
+                    action_id = 36*coord[0] + 4*coord[1] + plant_id
+                    legal_actions.append(action_id)
+        
+        if len(legal_actions) == 0:
+            return Action(c.IDLE, 0, 0, 0)
+        
+
+        if random.random() > self.epsilon:
+            with torch.no_grad():
+                state = torch.FloatTensor(process_state(state)).unsqueeze(0)
+                q_value = self.model.forward(state)
+                q_value_legal = q_value.squeeze()[legal_actions]
+                action = legal_actions[q_value_legal.argmax(0)]
+        else:
+            action = random.choice(legal_actions)
+        
+        x, y, plant = decode_action(action)
+        return Action(plant_availability[plant][0], plant_availability[plant][2], x, y)
+
     def getAction(self, state: GameState, current_time):
-        # TODO
-        ...
-
-    def reflex(self, state: GameState):
-        # TODO
-        ...
-
-    # some functions
-
-# We assume each line to be a Q-learning and compute value for each box
-# Give each box a value and search the maximum step
-# 
+        gameState = state.getGameState()
+        if gameState == "end":
+            return Action(c.IDLE, 0, 0, 0)
+        if current_time - self.play_time >= self.play_interval:
+            self.play_time = current_time
+            act = self.act(state)
+            return act
+        else:
+            return Action(c.IDLE, 0, 0, 0)

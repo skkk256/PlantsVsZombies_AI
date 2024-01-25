@@ -29,6 +29,8 @@ SIZE_MULTIPLIER = 1.3
 MOUSE_AGENT = "MouseAgent"
 RANDOM_AGENT = "RandomAgent"
 LOACL_AGENT = "LocalAgent"
+QLEARN_AGENT = "QlearnAgent"
+DQN_AGENT = "DQNAgent"
 BLANK = "Blank"
 IDLE = "idel"
 

@@ -537,7 +537,8 @@ class Level(tool.State):
 
     def checkGameState(self):
         if self.checkVictory():
-            self.game_info[c.LEVEL_NUM] += 1
+            #if self.game_info[c.LEVEL_NUM] < 6:
+            #    self.game_info[c.LEVEL_NUM] += 1
             self.next = c.GAME_VICTORY
             self.done = True
         elif self.checkLose():
