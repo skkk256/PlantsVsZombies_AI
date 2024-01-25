@@ -144,7 +144,7 @@ average_rewards = []
 
 window_size = 50
 
-for episode in range(10000):
+for episode in range(15000):
     act_list = []
     epsilon = epsilon_by_episode(episode)
 
@@ -181,8 +181,3 @@ for episode in range(10000):
 
 
 torch.save(model.state_dict(), 'source/agents/dqn_model.pth')
-plt.plot(range(window_size, 10001, window_size), average_rewards)
-plt.title(f'Average Total Reward per {window_size} Episodes')
-plt.xlabel('Episode Index')
-plt.ylabel('Average Total Reward')
-plt.show()
